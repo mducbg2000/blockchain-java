@@ -7,12 +7,14 @@ public class Blockchain {
     public Blockchain() {
         this.blocks = new ArrayList<>();
         Block genesisBlock = genesisBlock();
+        ProofOfWork.miningBlock(genesisBlock);
         this.blocks.add(genesisBlock);
     }
 
     public void addBlock(String data) {
         Block lastBlock = this.blocks.get(blocks.size() - 1);
         Block newBlock = new Block(data, lastBlock.getHash());
+        ProofOfWork.miningBlock(newBlock);
         this.blocks.add(newBlock);
     }
 

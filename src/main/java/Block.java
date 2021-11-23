@@ -6,17 +6,16 @@ public class Block {
     private final String prevHash;
     private final Instant timeStamp;
     private final String data;
+    private int nonce;
 
     public Block(String data, String prevHash) {
         this.prevHash = prevHash;
         this.timeStamp = Instant.now();
         this.data = data;
-        this.setHash();
     }
 
-    public void setHash() {
-        String header = this.prevHash + this.timeStamp.toString() + this.data;
-        this.hash = Utils.hash(header);
+    public void setHash(String hash) {
+        this.hash = hash;
     }
 
     public String getData() {
@@ -35,6 +34,13 @@ public class Block {
         return timeStamp;
     }
 
+    public int getNonce() {
+        return nonce;
+    }
+
+    public void setNonce(int nonce) {
+        this.nonce = nonce;
+    }
 
     @Override
     public String toString() {
@@ -43,6 +49,7 @@ public class Block {
                 "\nhash=" + hash +
                 "\ntimeStamp=" + timeStamp +
                 "\ndata=" + data +
+                "\nnonce=" + nonce +
                 "\n}";
     }
 }
