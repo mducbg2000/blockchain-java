@@ -1,7 +1,9 @@
+package core;
 
+import java.io.Serializable;
 import java.time.Instant;
 
-public class Block {
+public class Block implements Serializable {
     private String hash;
     private final String prevHash;
     private final Instant timeStamp;
