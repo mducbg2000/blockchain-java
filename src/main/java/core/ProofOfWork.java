@@ -1,3 +1,6 @@
+package core;
+
+import org.apache.commons.codec.digest.DigestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,7 +24,7 @@ public class ProofOfWork {
         do {
             nonce++;
             String header = prepareData(block, nonce);
-            hash = Utils.hash(header);
+            hash = DigestUtils.sha256Hex(header);
         } while (!hash.substring(0, DIFFICULTY).equals(prefix));
         logger.info("Hash is {} with nonce {}", hash, nonce);
         block.setNonce(nonce);
