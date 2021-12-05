@@ -1,15 +1,28 @@
-import controllers.CLI;
-import org.apache.commons.cli.ParseException;
-import org.apache.commons.codec.DecoderException;
+
+import controllers.BlockController;
+import controllers.TransactionController;
+import core.Transaction;
+import org.mapdb.DB;
+import org.mapdb.DBMaker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import repository.BlockRepository;
+
+import java.io.File;
 
 public class Main {
 
-    private static final Logger logger = LoggerFactory.getLogger(Main.class);
+    private static final String DBFILE = "Database/blockchain.db";
 
-    public static void main(String[] args) throws ParseException, DecoderException {
-        CLI cli = new CLI();
-        cli.cliParser(args);
+    public static void main(String[] args) {
+        DB db = DBMaker.fileDB(new File(DBFILE))
+                .closeOnJvmShutdown()
+                .transactionEnable()
+                .make();
+
+        BlockRepository blockRepository = new BlockRepository(db);
+        TransactionController transactionController = new TransactionController(blockRepository);
+        BlockController blockController = new BlockController(blockRepository, transactionController);
+
     }
 }

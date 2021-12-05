@@ -10,12 +10,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.concurrent.ConcurrentMap;
 
-public class BlockRepo {
+public class BlockRepository {
     private final ConcurrentMap<String, String> blocks;
     private final DB db;
-    private final static Logger logger = LoggerFactory.getLogger(BlockRepo.class);
+    private final static Logger logger = LoggerFactory.getLogger(BlockRepository.class);
 
-    public BlockRepo(DB db) {
+    public BlockRepository(DB db) {
         this.db = db;
         this.blocks = this.db.hashMap("blocks")
                 .keySerializer(Serializer.STRING)
@@ -23,7 +23,7 @@ public class BlockRepo {
                 .createOrOpen();
     }
 
-    public Block getLastBlock() throws DecoderException {
+    public Block getLastBlock() {
         if (this.blocks.size() == 0) {
             return null;
         }
@@ -39,15 +39,21 @@ public class BlockRepo {
         this.db.commit();
     }
 
-    public Block getPreviousBlock(Block block) throws DecoderException {
+    public Block getPreviousBlock(Block block) {
         String previousHash = block.getPrevHash();
-        if (previousHash == null) return null;
+        if (previousHash == null || previousHash.equals("")) return null;
         return getBlock(previousHash);
     }
 
-    public Block getBlock(String hash) throws DecoderException {
+    public Block getBlock(String hash) {
         if (hash == null) return null;
-        return SerializationUtils.deserialize(Hex.decodeHex(this.blocks.get(hash)));
+        Block block = null;
+        try {
+            block = SerializationUtils.deserialize(Hex.decodeHex(this.blocks.get(hash)));
+        } catch (DecoderException e) {
+            logger.info(e.getMessage());
+        }
+        return block;
     }
 
 
