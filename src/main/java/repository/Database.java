@@ -7,7 +7,7 @@ import java.io.File;
 
 public class Database {
 
-    private static final String DBFILE = "Database/blockchain.db";
+    private static final String DBFILE = "Database/Test3.db";
     private static final DB db;
 
     static {
