@@ -5,11 +5,8 @@ import org.junit.jupiter.api.Test;
 public class MainTest {
     @Test
     public void testAddCLI() throws DecoderException, ParseException {
-        for (int i = 0; i < 5; i++) {
-            String[] args = new String[]{"-a", "Test open file lần thứ " + i};
-            Main.main(args);
-        }
-
+        String[] args = new String[]{"-a", "Test open file database"};
+        Main.main(args);
     }
 
     @Test
