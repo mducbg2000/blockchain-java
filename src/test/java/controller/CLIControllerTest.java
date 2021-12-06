@@ -30,13 +30,13 @@ public class CLIControllerTest {
 
     @Test
     public void testGetBalance() throws ParseException {
-        String[] args = new String[]{"-b", "bob"};
+        String[] args = new String[]{"-b", "alice"};
         cliController.CLIParser(args);
     }
 
     @Test
     public void testSendCoin() throws ParseException {
-        String[] args = new String[]{"--send", "-Dfrom=bob", "-Dto=alice", "-Damount=3"};
+        String[] args = new String[]{"--send", "-Dfrom=alice", "-Dto=jax", "-Damount=12"};
         cliController.CLIParser(args);
     }
 
