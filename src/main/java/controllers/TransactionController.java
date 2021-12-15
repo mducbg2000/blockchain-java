@@ -63,15 +63,15 @@ public class TransactionController {
 
 
     /**
-     *  find spendable UTXOs for a new transaction; there's no need to find all UTXOs,
-     *  only find some UTXOs with a total value more than or equal to the transaction's value.
+     * find spendable UTXOs for a new transaction; there's no need to find all UTXOs,
+     * only find some UTXOs with a total value more than or equal to the transaction's value.
      *
-     *  @param  address address can unlock output
-     *  @param  amount value spend in a transaction
-     *  @return total value can spend and map store transaction id and index of spendable UTXO in that transaction
+     * @param address address can unlock output
+     * @param amount  value spend in a transaction
+     * @return total value can spend and map store transaction id and index of spendable UTXO in that transaction
      */
-    public Pair<Integer, Map<String, List<Integer>>> findSpendableUTXOs(String address, int amount) {
-        Map<String, List<Integer>> spendableOutputs = new HashMap<>();
+    public Pair<Integer, Map<String, Integer>> findSpendableUTXOs(String address, int amount) {
+        Map<String, Integer> spendableOutputs = new HashMap<>();
         List<Transaction> unspentTxs = findUnspentTransactions(address);
         int value = 0;
 
@@ -80,9 +80,7 @@ public class TransactionController {
             for (TXOutput out : tx.getOutputs()) {
                 if (canBeUnlocked(out, address)) {
                     value += out.getValue();
-                    spendableOutputs
-                            .computeIfAbsent(tx.getId(), k -> new ArrayList<>())
-                            .add(tx.getOutputs().indexOf(out));
+                    spendableOutputs.put(tx.getId(), tx.getOutputs().indexOf(out));
                     if (value >= amount) break txLoop;
                 }
             }
@@ -104,7 +102,8 @@ public class TransactionController {
         // store spent tx output
         // key is txId
         // value is array index of spent output in that tx
-        Map<String, List<Integer>> spentTXOs = new HashMap<>();
+//        Map<String, List<Integer>> spentTXOs = new HashMap<>();
+        Set<String> spentTXs = new HashSet<>();
 
         Block block = this.blockRepository.getLastBlock();
 
@@ -114,10 +113,12 @@ public class TransactionController {
             for (Transaction tx : block.getTransactions()) {
                 String txId = tx.getId();
                 // iterator output of transaction
+
                 for (TXOutput txOutput : tx.getOutputs()) {
                     // if this tx has spent output
-                    if (spentTXOs.containsKey(txId)
-                            && spentTXOs.get(txId).contains(tx.getOutputs().indexOf(txOutput))) continue;
+                    if (spentTXs.contains(txId)) continue;
+//                    if (spentTXOs.containsKey(txId)
+//                            && spentTXOs.get(txId).contains(tx.getOutputs().indexOf(txOutput))) continue;
 
                     if (canBeUnlocked(txOutput, address)) unspentTXs.add(tx);
                 }
@@ -126,9 +127,11 @@ public class TransactionController {
                 if (!isCoinbase(tx)) {
                     for (TXInput inp : tx.getInputs()) {
                         if (canUnlockOutput(inp, address)) {
-                            spentTXOs
-                                    .computeIfAbsent(inp.getTxId(), k -> new ArrayList<>())
-                                    .add(inp.getOutId());
+                            spentTXs.add(inp.getTxId());
+
+//                            spentTXOs
+//                                    .computeIfAbsent(inp.getTxId(), k -> new ArrayList<>())
+//                                    .add(inp.getOutId());
                         }
                     }
                 }
@@ -176,10 +179,10 @@ public class TransactionController {
         List<TXOutput> outputs = new ArrayList<>();
 
         // get value of coin and outputs can spend for transaction
-        Pair<Integer, Map<String, List<Integer>>> pair = findSpendableUTXOs(from, amount);
+        Pair<Integer, Map<String, Integer>> pair = findSpendableUTXOs(from, amount);
 
         int spendValue = pair.getLeft();
-        Map<String, List<Integer>> spendableOutputs = pair.getRight();
+        Map<String, Integer> spendableOutputs = pair.getRight();
 
         // if not enough coin
         if (spendValue < amount) {
@@ -188,11 +191,9 @@ public class TransactionController {
         }
 
         // build inputs of transaction
-        spendableOutputs.forEach((txId, outputIds) -> {
-            for (int i : outputIds) {
-                TXInput input = new TXInput(txId, i, from);
-                inputs.add(input);
-            }
+        spendableOutputs.forEach((txId, outputId) -> {
+            TXInput input = new TXInput(txId, outputId, from);
+            inputs.add(input);
         });
 
         // output to send amount to receiver

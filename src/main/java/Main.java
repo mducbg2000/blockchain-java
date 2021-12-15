@@ -1,11 +1,7 @@
-
 import controllers.BlockController;
 import controllers.TransactionController;
-import core.Transaction;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import repository.BlockRepository;
 
 import java.io.File;
