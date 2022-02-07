@@ -1,27 +1,40 @@
 package core;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import org.apache.commons.codec.digest.DigestUtils;
+
 import java.io.Serializable;
 import java.time.Instant;
+import java.util.List;
 
 public class Block implements Serializable {
     private String hash;
     private final String prevHash;
     private final Instant timeStamp;
-    private final String data;
+    private final List<Transaction> transactions;
     private int nonce;
 
-    public Block(String data, String prevHash) {
+    public Block(List<Transaction> transactions, String prevHash) {
         this.prevHash = prevHash;
         this.timeStamp = Instant.now();
-        this.data = data;
+        this.transactions = transactions;
     }
 
     public void setHash(String hash) {
         this.hash = hash;
     }
 
-    public String getData() {
-        return data;
+    public List<Transaction> getTransactions() {
+        return transactions;
+    }
+
+    public String getHashTransactions() {
+        String txHash = "";
+        for (Transaction tx : transactions) {
+            txHash = txHash.concat(tx.getId());
+        }
+        return DigestUtils.sha256Hex(txHash);
     }
 
     public String getHash() {
@@ -46,12 +59,16 @@ public class Block implements Serializable {
 
     @Override
     public String toString() {
-        return "Block{" +
-                "\nprevHash=" + prevHash +
-                "\nhash=" + hash +
-                "\ntimeStamp=" + timeStamp +
-                "\ndata=" + data +
-                "\nnonce=" + nonce +
-                "\n}";
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        return gson.toJson(this);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof Block) {
+            return this.hash.equals(((Block) o).hash);
+        }
+        return false;
+    }
+
 }

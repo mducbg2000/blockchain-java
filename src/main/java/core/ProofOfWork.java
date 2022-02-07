@@ -12,12 +12,12 @@ public class ProofOfWork {
     private static String prepareData(Block block, int nonce) {
         return block.getPrevHash() +
                 block.getTimeStamp().toString() +
-                block.getData() +
+                block.getHashTransactions() +
                 nonce;
     }
 
     public static void miningBlock(Block block) {
-        logger.info("Mining Block of Data: {}", block.getData());
+        logger.info("Mining Block of Transactions: {}", block.getHashTransactions());
         String prefix = new String(new char[DIFFICULTY]).replace('\0', '0');
         int nonce = -1;
         String hash;
