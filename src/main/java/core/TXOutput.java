@@ -1,18 +1,19 @@
 package core;
 
-import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
+import utils.CryptoUtil;
 
 import java.io.Serializable;
+import java.util.Arrays;
 
 public class TXOutput implements Serializable {
     private int value;
-    private String scriptPubKey;
+    private byte[] pubKeyHash;
 
     public TXOutput() {}
 
-    public TXOutput(int value, String scriptPubKey) {
+    public TXOutput(int value, String address) {
         this.value = value;
-        this.scriptPubKey = scriptPubKey;
+        this.lock(address);
     }
 
     public int getValue() {
@@ -23,12 +24,24 @@ public class TXOutput implements Serializable {
         this.value = value;
     }
 
-    public String getScriptPubKey() {
-        return scriptPubKey;
+    public byte[] getPubKeyHash() {
+        return pubKeyHash;
     }
 
-    public void setScriptPubKey(String scriptPubKey) {
-        this.scriptPubKey = scriptPubKey;
+    public void setPubKeyHash(byte[] pubKeyHash) {
+        this.pubKeyHash = pubKeyHash;
     }
 
+    public boolean isLockedWith(String address) {
+        byte[] pubKeyHash = CryptoUtil.getPubKeyHashFromAddress(address);
+        return isLockedWith(pubKeyHash);
+    }
+
+    public boolean isLockedWith(byte[] pubKeyHash) {
+        return Arrays.equals(pubKeyHash, this.pubKeyHash);
+    }
+
+    public void lock(String address) {
+        this.pubKeyHash = CryptoUtil.getPubKeyHashFromAddress(address);
+    }
 }

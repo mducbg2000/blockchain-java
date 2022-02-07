@@ -1,7 +1,5 @@
 package core;
 
-import org.apache.commons.codec.digest.DigestUtils;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -49,7 +47,7 @@ public class Transaction implements Serializable {
     }
 
     private void setId() {
-        this.id = DigestUtils.sha256Hex(UUID.randomUUID().toString());
+        this.id = UUID.randomUUID().toString();
     }
 
     @Override

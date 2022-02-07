@@ -4,12 +4,14 @@ import core.Block;
 import core.TXInput;
 import core.TXOutput;
 import core.Transaction;
+import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import repository.BlockRepository;
 
+import java.security.PrivateKey;
 import java.util.*;
 
 public class TransactionController {
@@ -26,23 +28,21 @@ public class TransactionController {
      * create a transaction without inputs - also called coinbase transaction
      *
      * @param miner address of miner who will receive a reward if a block is successfully mined
-     * @param data  random scriptSig for input
      * @return new coinbase transaction
      */
-    public Transaction newCoinbaseTX(String miner, String data) {
-        if (data == null || data.equals("")) data = "Reward to " + miner;
-        TXInput txInput = new TXInput("0", -1, data);
+    public Transaction newCoinbaseTX(String miner) {
+        TXInput txInput = new TXInput("0", -1);
         TXOutput txOutput = new TXOutput(REWARD, miner);
         return new Transaction(List.of(txInput), List.of(txOutput));
     }
 
-    public boolean canUnlockOutput(TXInput txInput, String unlockingData) {
-        return txInput.getScriptSig().equals(unlockingData);
+    public byte[] signTransaction(PrivateKey privateKey, Transaction tx, List<Transaction> prevTxs) {
+
+        if (isCoinbase(tx)) return null;
+
+        return new byte[]{};
     }
 
-    public boolean canBeUnlocked(TXOutput txOutput, String unlockingData) {
-        return txOutput.getScriptPubKey().equals(unlockingData);
-    }
 
     /**
      * find all Unspent Transaction Outputs - UTXOs
@@ -55,7 +55,7 @@ public class TransactionController {
         List<Transaction> unspentTXs = findUnspentTransactions(address);
         for (Transaction tx : unspentTXs) {
             for (TXOutput out : tx.getOutputs()) {
-                if (canBeUnlocked(out, address)) UTXOs.add(out);
+                if (out.isLockedWith(address)) UTXOs.add(out);
             }
         }
         return UTXOs;
@@ -78,7 +78,7 @@ public class TransactionController {
         txLoop:
         for (Transaction tx : unspentTxs) {
             for (TXOutput out : tx.getOutputs()) {
-                if (canBeUnlocked(out, address)) {
+                if (out.isLockedWith(address)) {
                     value += out.getValue();
                     spendableOutputs.put(tx.getId(), tx.getOutputs().indexOf(out));
                     if (value >= amount) break txLoop;
@@ -96,45 +96,29 @@ public class TransactionController {
      * @return list of tx contain UTXOs
      */
     public List<Transaction> findUnspentTransactions(String address) {
-
         Set<Transaction> unspentTXs = new HashSet<>();
-
-        // store spent tx output
-        // key is txId
-        // value is array index of spent output in that tx
-//        Map<String, List<Integer>> spentTXOs = new HashMap<>();
         Set<String> spentTXs = new HashSet<>();
 
         Block block = this.blockRepository.getLastBlock();
 
         while (block != null) {
 
-            // iterator transactions of block
             for (Transaction tx : block.getTransactions()) {
                 String txId = tx.getId();
-                // iterator output of transaction
 
                 for (TXOutput txOutput : tx.getOutputs()) {
-                    // if this tx has spent output
                     if (spentTXs.contains(txId)) continue;
-//                    if (spentTXOs.containsKey(txId)
-//                            && spentTXOs.get(txId).contains(tx.getOutputs().indexOf(txOutput))) continue;
-
-                    if (canBeUnlocked(txOutput, address)) unspentTXs.add(tx);
+                    if (txOutput.isLockedWith(address)) unspentTXs.add(tx);
                 }
 
-                // if not coinbase
                 if (!isCoinbase(tx)) {
                     for (TXInput inp : tx.getInputs()) {
-                        if (canUnlockOutput(inp, address)) {
+                        if (inp.useAddress(address)) {
                             spentTXs.add(inp.getTxId());
-
-//                            spentTXOs
-//                                    .computeIfAbsent(inp.getTxId(), k -> new ArrayList<>())
-//                                    .add(inp.getOutId());
                         }
                     }
                 }
+
             }
 
             block = this.blockRepository.getPreviousBlock(block);
@@ -178,28 +162,27 @@ public class TransactionController {
         List<TXInput> inputs = new ArrayList<>();
         List<TXOutput> outputs = new ArrayList<>();
 
-        // get value of coin and outputs can spend for transaction
         Pair<Integer, Map<String, Integer>> pair = findSpendableUTXOs(from, amount);
 
         int spendValue = pair.getLeft();
         Map<String, Integer> spendableOutputs = pair.getRight();
 
-        // if not enough coin
         if (spendValue < amount) {
             logger.error("{} not enough {} coins!", from, amount);
             return null;
         }
 
         // build inputs of transaction
+
         spendableOutputs.forEach((txId, outputId) -> {
-            TXInput input = new TXInput(txId, outputId, from);
+            TXInput input = new TXInput(txId, outputId);
             inputs.add(input);
         });
 
         // output to send amount to receiver
         outputs.add(new TXOutput(amount, to));
 
-        // output to send tiền thừa
+        // output to send change
         if (spendValue > amount) {
             outputs.add(new TXOutput(spendValue - amount, from));
         }
@@ -207,5 +190,7 @@ public class TransactionController {
         return new Transaction(inputs, outputs);
 
     }
+
+
 
 }

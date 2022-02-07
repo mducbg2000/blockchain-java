@@ -1,27 +1,28 @@
 package core;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import org.apache.commons.codec.digest.DigestUtils;
+import utils.GsonUtil;
+import utils.HashUtil;
 
 import java.io.Serializable;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.List;
 
 public class Block implements Serializable {
-    private String hash;
-    private final String prevHash;
+    private byte[] hash;
+    private final byte[] prevHash;
     private final Instant timeStamp;
     private final List<Transaction> transactions;
     private int nonce;
 
-    public Block(List<Transaction> transactions, String prevHash) {
+    public Block(List<Transaction> transactions, final byte[] prevHash) {
         this.prevHash = prevHash;
         this.timeStamp = Instant.now();
         this.transactions = transactions;
     }
 
-    public void setHash(String hash) {
+    public void setHash(byte[] hash) {
         this.hash = hash;
     }
 
@@ -30,18 +31,18 @@ public class Block implements Serializable {
     }
 
     public String getHashTransactions() {
-        String txHash = "";
+        StringBuilder txHash = new StringBuilder();
         for (Transaction tx : transactions) {
-            txHash = txHash.concat(tx.getId());
+            txHash.append(tx.getId());
         }
-        return DigestUtils.sha256Hex(txHash);
+        return HashUtil.sha256ToHex(txHash.toString());
     }
 
-    public String getHash() {
+    public byte[] getHash() {
         return hash;
     }
 
-    public String getPrevHash() {
+    public byte[] getPrevHash() {
         return prevHash;
     }
 
@@ -59,14 +60,14 @@ public class Block implements Serializable {
 
     @Override
     public String toString() {
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        Gson gson = GsonUtil.getGson();
         return gson.toJson(this);
     }
 
     @Override
     public boolean equals(Object o) {
         if (o instanceof Block) {
-            return this.hash.equals(((Block) o).hash);
+            return Arrays.equals(this.hash, ((Block) o).hash);
         }
         return false;
     }

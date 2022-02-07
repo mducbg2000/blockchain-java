@@ -1,20 +1,24 @@
 package core;
 
-import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
+
+import utils.HashUtil;
+import utils.CryptoUtil;
 
 import java.io.Serializable;
+import java.security.PublicKey;
+import java.util.Arrays;
 
 public class TXInput implements Serializable {
     private String txId;
     private int outId;
-    private String scriptSig;
+    private byte[] signature;
+    private PublicKey publicKey;
 
     public TXInput(){}
 
-    public TXInput(String txId, int outId, String scriptSig) {
+    public TXInput(String txId, int outId) {
         this.txId = txId;
         this.outId = outId;
-        this.scriptSig = scriptSig;
     }
 
     public String getTxId() {
@@ -33,13 +37,30 @@ public class TXInput implements Serializable {
         this.outId = outId;
     }
 
-    public String getScriptSig() {
-        return scriptSig;
+    public byte[] getSignature() {
+        return signature;
     }
 
-    public void setScriptSig(String scriptSig) {
-        this.scriptSig = scriptSig;
+    public void setSignature(byte[] signature) {
+        this.signature = signature;
     }
 
+    public PublicKey getPublicKey() {
+        return publicKey;
+    }
+
+    public void setPublicKey(PublicKey publicKey) {
+        this.publicKey = publicKey;
+    }
+
+    public boolean useAddress(String address) {
+        byte[] pubKeyHash = CryptoUtil.getPubKeyHashFromAddress(address);
+        return useKey(pubKeyHash);
+    }
+
+    public boolean useKey(byte[] pubKeyHash) {
+        byte[] lockingHash = HashUtil.hashPubKey(publicKey);
+        return Arrays.equals(pubKeyHash, lockingHash);
+    }
 
 }
