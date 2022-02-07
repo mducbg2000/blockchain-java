@@ -1,8 +1,5 @@
-package controller;
+package controllers;
 
-import controllers.BlockController;
-import controllers.CLIController;
-import controllers.TransactionController;
 import org.apache.commons.cli.ParseException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,7 +13,7 @@ public class CLIControllerTest {
 
     @BeforeEach
     public void init() {
-        DB db = DBMaker.fileDB("Database/Test4.db").closeOnJvmShutdown().make();
+        DB db = DBMaker.fileDB("Database/Test5.db").closeOnJvmShutdown().make();
         BlockRepository blockRepository = new BlockRepository(db);
         TransactionController transactionController = new TransactionController(blockRepository);
         BlockController blockController = new BlockController(blockRepository, transactionController);

@@ -17,7 +17,6 @@ public class CLIController {
         this.buildOption();
     }
 
-
     public void CLIParser(String[] args) throws ParseException {
         CommandLineParser parser = new DefaultParser();
         CommandLine cli = parser.parse(options, args);
